@@ -2,801 +2,344 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QR Farm Game</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+    <title>Stardew Lite</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
+            margin: 0;
+            background-color: #222;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Courier New', monospace;
+            color: white;
             overflow: hidden;
         }
 
-        .container {
-            max-width: 500px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .header {
-            text-align: center;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .qr-section {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            border-radius: 20px;
-            text-align: center;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .qr-code {
-            background: white;
-            padding: 15px;
-            border-radius: 15px;
-            display: inline-block;
-            margin: 15px 0;
-        }
-
-        #qrcode {
-            width: 180px;
-            height: 180px;
-        }
-
-        .qr-instructions {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-top: 10px;
-        }
-
-        .game-container {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 15px;
-            display: none;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .stat {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px;
-            border-radius: 15px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 14px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .stat-icon {
-            font-size: 20px;
-        }
-
-        .stat-value {
-            font-size: 18px;
-            color: #f1c40f;
-        }
-
-        .game-area {
+        #game-container {
             position: relative;
-            width: 100%;
-            height: 400px;
-            background: #7ec850;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 15px;
-            border: 4px solid #2c3e50;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            cursor: crosshair;
         }
 
-        #gameCanvas {
-            width: 100%;
-            height: 100%;
+        canvas {
+            background-color: #4CAF50; /* Grass Color */
             display: block;
-            image-rendering: pixelated;
+            border-radius: 4px;
         }
 
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 80px);
-            gap: 10px;
-        }
-
-        .control-btn {
-            background: rgba(52, 152, 219, 0.8);
-            border: none;
-            border-radius: 20px;
-            color: white;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        .control-btn:active {
-            transform: scale(0.95);
-            background: rgba(41, 128, 185, 0.8);
-        }
-
-        .action-btn {
-            grid-column: 1 / span 3;
-            background: rgba(46, 204, 113, 0.8);
-            font-size: 20px;
-            gap: 10px;
-        }
-
-        .action-btn:active {
-            background: rgba(39, 174, 96, 0.8);
-        }
-
-        .tool-btn {
-            background: rgba(155, 89, 182, 0.8);
-            grid-column: 1 / span 3;
-            font-size: 18px;
-            height: 60px;
-        }
-
-        .tool-btn:active {
-            background: rgba(142, 68, 173, 0.8);
-        }
-
-        .directions {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 15px;
-            font-size: 14px;
-            line-height: 1.5;
-            margin-top: 10px;
-        }
-
-        .menu {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .menu-btn {
-            flex: 1;
-            padding: 12px;
-            background: rgba(231, 76, 60, 0.8);
-            border: none;
-            border-radius: 15px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .menu-btn.buy {
-            background: rgba(52, 152, 219, 0.8);
-        }
-
-        .message {
-            position: fixed;
-            top: 20px;
+        #ui-bar {
+            position: absolute;
+            bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(44, 62, 80, 0.95);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 15px;
-            z-index: 1000;
-            display: none;
-            text-align: center;
-            max-width: 90%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 2px solid #3498db;
-        }
-
-        .pwa-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: rgba(44, 62, 80, 0.95);
-            padding: 15px;
-            border-radius: 15px;
-            z-index: 1000;
-            text-align: center;
-            display: none;
-            border: 2px solid #3498db;
-        }
-
-        .pwa-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 10px 20px;
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
             border-radius: 10px;
-            margin-top: 10px;
+            border: 2px solid #8d6e63;
+        }
+
+        .tool {
+            width: 50px;
+            height: 50px;
+            background: #d7ccc8;
+            border: 4px solid #5d4037;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
             font-weight: bold;
+            color: #333;
             cursor: pointer;
+            position: relative;
         }
 
-        .pwa-btn.secondary {
-            background: #7f8c8d;
-            margin-left: 10px;
+        .tool.active {
+            border-color: #f1c40f;
+            background: #fff;
+            transform: translateY(-5px);
         }
 
-        /* Mobile optimizations */
-        @media (max-width: 480px) {
-            .controls {
-                grid-template-rows: repeat(3, 70px);
-            }
-            
-            .control-btn {
-                font-size: 24px;
-            }
-            
-            .game-area {
-                height: 350px;
-            }
+        .tool span.key {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+            color: #555;
         }
 
-        @media (max-height: 700px) {
-            .game-area {
-                height: 300px;
-            }
-            
-            .controls {
-                grid-template-rows: repeat(3, 60px);
-            }
-        }
-
-        /* Landscape mode */
-        @media (orientation: landscape) and (max-height: 600px) {
-            .container {
-                flex-direction: row;
-                max-width: 100%;
-                gap: 20px;
-            }
-            
-            .qr-section, .game-container {
-                flex: 1;
-            }
-            
-            .game-area {
-                height: 300px;
-            }
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .container > * {
-            animation: fadeIn 0.5s ease-out;
+        #money-box {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 20px;
+            border: 2px solid #f1c40f;
+            color: #f1c40f;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🌾 QR Farm Game</h1>
-            <p>Scan QR code to play on mobile!</p>
-        </div>
-        
-        <div class="qr-section" id="qrSection">
-            <h2>Scan to Play</h2>
-            <div class="qr-code">
-                <canvas id="qrcode"></canvas>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div id="money-box">💰 <span id="money-display">0</span></div>
+
+        <div id="ui-bar">
+            <div class="tool active" id="tool-1" onclick="setTool(1)">
+                <span class="key">1</span>🔨
             </div>
-            <p class="qr-instructions">Point your phone's camera at this QR code to open the game</p>
-            <button class="menu-btn buy" onclick="startGame()">Play Now (Desktop)</button>
-        </div>
-        
-        <div class="game-container" id="gameContainer">
-            <div class="stats-bar">
-                <div class="stat">
-                    <span class="stat-icon">💰</span>
-                    <span class="stat-value" id="money">100</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-icon">🌱</span>
-                    <span class="stat-value" id="seeds">5</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-icon">🌽</span>
-                    <span class="stat-value" id="crops">0</span>
-                </div>
+            <div class="tool" id="tool-2" onclick="setTool(2)">
+                <span class="key">2</span>💧
             </div>
-            
-            <div class="game-area">
-                <canvas id="gameCanvas"></canvas>
+            <div class="tool" id="tool-3" onclick="setTool(3)">
+                <span class="key">3</span>🌱
             </div>
-            
-            <div class="controls">
-                <div></div>
-                <button class="control-btn" data-direction="up">↑</button>
-                <div></div>
-                
-                <button class="control-btn" data-direction="left">←</button>
-                <button class="control-btn action-btn" id="actionBtn">🌱 Plant</button>
-                <button class="control-btn" data-direction="right">→</button>
-                
-                <div></div>
-                <button class="control-btn" data-direction="down">↓</button>
-                <div></div>
-                
-                <button class="control-btn tool-btn" id="toolBtn">🔄 Switch Tool</button>
-            </div>
-            
-            <div class="directions">
-                <strong>How to play:</strong> Move with arrows, tap Action to use current tool (Plant/Water/Harvest)
-            </div>
-            
-            <div class="menu">
-                <button class="menu-btn buy" onclick="buySeeds()">Buy Seeds (10g)</button>
-                <button class="menu-btn" onclick="resetGame()">New Game</button>
+            <div class="tool" id="tool-4" onclick="setTool(4)">
+                <span class="key">4</span>🧺
             </div>
         </div>
-    </div>
-    
-    <div class="message" id="message"></div>
-    
-    <div class="pwa-prompt" id="pwaPrompt">
-        <p>Install QR Farm Game to play offline!</p>
-        <button class="pwa-btn" onclick="installPWA()">Install</button>
-        <button class="pwa-btn secondary" onclick="hidePWAPrompt()">Not Now</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
-        // Generate QR Code for current URL
-        document.addEventListener('DOMContentLoaded', function() {
-            QRCode.toCanvas(
-                document.getElementById('qrcode'),
-                window.location.href,
-                { width: 180, margin: 1, color: { dark: '#000000', light: '#ffffff' } },
-                function(error) {
-                    if (error) console.error(error);
-                }
-            );
-            
-            // Check if page is loaded via QR code scan
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-            
-            if (isMobile && !isStandalone) {
-                // Show PWA install prompt on mobile
-                setTimeout(() => {
-                    document.getElementById('pwaPrompt').style.display = 'block';
-                }, 3000);
-            }
-        });
-
-        // Game State
-        const gameState = {
-            money: 100,
-            seeds: 5,
-            crops: 0,
-            day: 1,
-            tools: ['hoe', 'seed', 'water', 'harvest'],
-            currentTool: 1,
-            player: { x: 5, y: 5 },
-            farmData: [],
-            cropsData: []
-        };
-
-        // Canvas setup
+        // --- GAME ENGINE SETUP ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const TILE_SIZE = 32;
-        const MAP_SIZE = 16;
-        
-        // Set canvas size
-        function resizeCanvas() {
-            const gameArea = document.querySelector('.game-area');
-            canvas.width = gameArea.clientWidth;
-            canvas.height = gameArea.clientHeight;
-        }
 
-        // Game map
-        const map = Array(MAP_SIZE).fill().map((_, y) => 
-            Array(MAP_SIZE).fill().map((_, x) => 
-                (x > 2 && x < 13 && y > 2 && y < 13) ? 1 : 0
-            )
-        );
+        // Settings
+        const TILE_SIZE = 40;
+        const COLS = 20;
+        const ROWS = 15;
 
-        // Initialize game data
-        function initGameData() {
-            for (let y = 0; y < MAP_SIZE; y++) {
-                gameState.farmData[y] = [];
-                gameState.cropsData[y] = [];
-                for (let x = 0; x < MAP_SIZE; x++) {
-                    gameState.farmData[y][x] = map[y][x];
-                    gameState.cropsData[y][x] = 0;
+        // Colors & Assets (Drawn via code)
+        const COLORS = {
+            grass: '#4CAF50',
+            dirt: '#795548',
+            wetDirt: '#4E342E',
+            hover: 'rgba(255, 255, 255, 0.3)',
+            player: '#FF5722',
+            hat: '#FBC02D'
+        };
+
+        // --- GAME STATE ---
+        let money = 0;
+        let currentTool = 1; // 1: Hoe, 2: Water, 3: Seeds, 4: Harvest
+
+        // The Map (0 = Grass, 1 = Dirt, 2 = Wet Dirt)
+        let map = [];
+        // The Crops (Object with key "x,y")
+        let crops = {};
+
+        // The Player
+        let player = { x: 400, y: 300, speed: 4, size: 20 };
+
+        // Input Tracking
+        let keys = {};
+        let mouse = { x: 0, y: 0 };
+
+        // --- INITIALIZATION ---
+        function init() {
+            // Build empty map
+            for (let r = 0; r < ROWS; r++) {
+                let row = [];
+                for (let c = 0; c < COLS; c++) {
+                    row.push(0);
                 }
+                map.push(row);
             }
+
+            // Start Loops
+            requestAnimationFrame(gameLoop);
+            setInterval(growPlants, 2000); // Plants grow every 2 seconds
         }
 
-        // Update stats display
-        function updateStats() {
-            document.getElementById('money').textContent = gameState.money;
-            document.getElementById('seeds').textContent = gameState.seeds;
-            document.getElementById('crops').textContent = gameState.crops;
-            
-            const actionBtn = document.getElementById('actionBtn');
-            const tool = gameState.tools[gameState.currentTool];
-            actionBtn.innerHTML = 
-                tool === 'hoe' ? '🪓 Till Soil' :
-                tool === 'seed' ? '🌱 Plant Seed' :
-                tool === 'water' ? '💧 Water Crop' :
-                '✂️ Harvest Crop';
-        }
+        // --- CORE LOOPS ---
 
-        // Show message
-        function showMessage(text, duration = 2000) {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.style.display = 'block';
-            
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-            }, duration);
-        }
-
-        // Start game
-        function startGame() {
-            document.getElementById('qrSection').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'block';
-            
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-            
-            initGameData();
-            updateStats();
-            gameLoop();
-        }
-
-        // Movement controls
-        const keys = {};
-        document.querySelectorAll('.control-btn[data-direction]').forEach(btn => {
-            const dir = btn.dataset.direction;
-            
-            // Touch events
-            btn.addEventListener('touchstart', (e) => {
-                keys[dir] = true;
-                e.preventDefault();
-            });
-            
-            btn.addEventListener('touchend', (e) => {
-                keys[dir] = false;
-                e.preventDefault();
-            });
-            
-            btn.addEventListener('touchcancel', (e) => {
-                keys[dir] = false;
-                e.preventDefault();
-            });
-            
-            // Mouse events
-            btn.addEventListener('mousedown', () => keys[dir] = true);
-            btn.addEventListener('mouseup', () => keys[dir] = false);
-            btn.addEventListener('mouseleave', () => keys[dir] = false);
-        });
-
-        // Keyboard support
-        document.addEventListener('keydown', (e) => {
-            switch(e.key) {
-                case 'ArrowUp': case 'w': keys.up = true; break;
-                case 'ArrowDown': case 's': keys.down = true; break;
-                case 'ArrowLeft': case 'a': keys.left = true; break;
-                case 'ArrowRight': case 'd': keys.right = true; break;
-                case ' ': case 'e': performAction(); break;
-                case 'q': switchTool(); break;
-            }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            switch(e.key) {
-                case 'ArrowUp': case 'w': keys.up = false; break;
-                case 'ArrowDown': case 's': keys.down = false; break;
-                case 'ArrowLeft': case 'a': keys.left = false; break;
-                case 'ArrowRight': case 'd': keys.right = false; break;
-            }
-        });
-
-        // Action button
-        document.getElementById('actionBtn').addEventListener('click', performAction);
-        document.getElementById('toolBtn').addEventListener('click', switchTool);
-
-        // Game functions
-        function performAction() {
-            const x = Math.floor(gameState.player.x);
-            const y = Math.floor(gameState.player.y);
-            const tool = gameState.tools[gameState.currentTool];
-            
-            switch(tool) {
-                case 'hoe':
-                    if (map[y][x] === 0) {
-                        map[y][x] = 1;
-                        gameState.farmData[y][x] = 1;
-                        showMessage('Tilled soil!');
-                    }
-                    break;
-                    
-                case 'seed':
-                    if (gameState.farmData[y][x] === 1 && gameState.cropsData[y][x] === 0) {
-                        if (gameState.seeds > 0) {
-                            gameState.cropsData[y][x] = 1;
-                            gameState.seeds--;
-                            updateStats();
-                            showMessage('Planted a seed!');
-                        } else {
-                            showMessage('No seeds left!');
-                        }
-                    }
-                    break;
-                    
-                case 'water':
-                    if (gameState.cropsData[y][x] > 0 && gameState.cropsData[y][x] < 4) {
-                        gameState.cropsData[y][x]++;
-                        showMessage('Watered crop!');
-                    }
-                    break;
-                    
-                case 'harvest':
-                    if (gameState.cropsData[y][x] === 4) {
-                        gameState.crops++;
-                        gameState.money += 20;
-                        gameState.cropsData[y][x] = 0;
-                        updateStats();
-                        showMessage('Harvested! +20g');
-                    }
-                    break;
-            }
-        }
-
-        function switchTool() {
-            gameState.currentTool = (gameState.currentTool + 1) % gameState.tools.length;
-            updateStats();
-            showMessage(`Tool: ${gameState.tools[gameState.currentTool]}`);
-        }
-
-        function buySeeds() {
-            if (gameState.money >= 10) {
-                gameState.money -= 10;
-                gameState.seeds += 5;
-                updateStats();
-                showMessage('Bought 5 seeds!');
-            } else {
-                showMessage('Not enough money!');
-            }
-        }
-
-        function resetGame() {
-            if (confirm('Start a new game? Current progress will be lost.')) {
-                gameState.money = 100;
-                gameState.seeds = 5;
-                gameState.crops = 0;
-                gameState.day = 1;
-                gameState.currentTool = 1;
-                gameState.player = { x: 5, y: 5 };
-                
-                initGameData();
-                updateStats();
-                showMessage('New game started!');
-            }
-        }
-
-        // PWA functions
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
-        function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        showMessage('Game installed!');
-                    }
-                    deferredPrompt = null;
-                });
-            }
-            hidePWAPrompt();
-        }
-
-        function hidePWAPrompt() {
-            document.getElementById('pwaPrompt').style.display = 'none';
-        }
-
-        // Game loop
         function gameLoop() {
-            // Update player position
-            const speed = 0.15;
-            if (keys.up) gameState.player.y -= speed;
-            if (keys.down) gameState.player.y += speed;
-            if (keys.left) gameState.player.x -= speed;
-            if (keys.right) gameState.player.x += speed;
-            
-            // Clamp position
-            gameState.player.x = Math.max(0, Math.min(MAP_SIZE - 1, gameState.player.x));
-            gameState.player.y = Math.max(0, Math.min(MAP_SIZE - 1, gameState.player.y));
-            
-            // Draw game
-            drawGame();
-            
-            // Continue loop
+            update();
+            draw();
             requestAnimationFrame(gameLoop);
         }
 
-        // Drawing functions
-        function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Calculate visible area based on player position
-            const viewX = Math.max(0, Math.floor(gameState.player.x) - 5);
-            const viewY = Math.max(0, Math.floor(gameState.player.y) - 4);
-            const tilesWide = Math.min(11, MAP_SIZE - viewX);
-            const tilesHigh = Math.min(9, MAP_SIZE - viewY);
-            
-            const tileSize = Math.min(
-                canvas.width / tilesWide,
-                canvas.height / tilesHigh
-            );
-            
-            // Draw tiles
-            for (let y = viewY; y < viewY + tilesHigh; y++) {
-                for (let x = viewX; x < viewX + tilesWide; x++) {
-                    const screenX = (x - viewX) * tileSize;
-                    const screenY = (y - viewY) * tileSize;
-                    
-                    // Draw ground
-                    ctx.fillStyle = map[y][x] === 1 ? '#c68642' : '#7ec850';
-                    ctx.fillRect(screenX, screenY, tileSize, tileSize);
-                    
-                    // Draw crop
-                    if (gameState.cropsData[y][x] > 0) {
-                        const stage = gameState.cropsData[y][x];
-                        ctx.fillStyle = 
-                            stage === 1 ? '#8b4513' :
-                            stage === 2 ? '#556b2f' :
-                            stage === 3 ? '#6b8e23' : '#32cd32';
-                        
-                        const size = tileSize * 0.6;
-                        ctx.fillRect(
-                            screenX + (tileSize - size) / 2,
-                            screenY + (tileSize - size) / 2,
-                            size,
-                            size
-                        );
+        function update() {
+            // Player Movement (Smooth)
+            if (keys['w'] || keys['ArrowUp']) player.y = Math.max(0, player.y - player.speed);
+            if (keys['s'] || keys['ArrowDown']) player.y = Math.min(canvas.height - player.size, player.y + player.speed);
+            if (keys['a'] || keys['ArrowLeft']) player.x = Math.max(0, player.x - player.speed);
+            if (keys['d'] || keys['ArrowRight']) player.x = Math.min(canvas.width - player.size, player.x + player.speed);
+        }
+
+        function growPlants() {
+            for (let key in crops) {
+                let crop = crops[key];
+                let [c, r] = key.split(',').map(Number);
+
+                // Only grow if soil is wet (map value 2)
+                if (map[r][c] === 2) {
+                    if (crop.stage < 3) {
+                        crop.stage++;
+                    } else {
+                        // Reset soil to dry after full growth (optional mechanic)
+                        map[r][c] = 1;
                     }
                 }
             }
-            
-            // Draw player
-            const playerScreenX = (gameState.player.x - viewX) * tileSize;
-            const playerScreenY = (gameState.player.y - viewY) * tileSize;
-            
-            // Player shadow
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.beginPath();
-            ctx.ellipse(
-                playerScreenX + tileSize / 2,
-                playerScreenY + tileSize * 0.85,
-                tileSize * 0.4,
-                tileSize * 0.2,
-                0, 0, Math.PI * 2
-            );
-            ctx.fill();
-            
-            // Player body
-            ctx.fillStyle = '#3498db';
-            ctx.fillRect(
-                playerScreenX + tileSize * 0.2,
-                playerScreenY + tileSize * 0.2,
-                tileSize * 0.6,
-                tileSize * 0.6
-            );
-            
-            // Player head
-            ctx.fillStyle = '#f1c40f';
-            ctx.beginPath();
-            ctx.arc(
-                playerScreenX + tileSize / 2,
-                playerScreenY + tileSize * 0.3,
-                tileSize * 0.25,
-                0, Math.PI * 2
-            );
-            ctx.fill();
-            
-            // Player hat
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(
-                playerScreenX + tileSize * 0.3,
-                playerScreenY + tileSize * 0.1,
-                tileSize * 0.4,
-                tileSize * 0.15
-            );
-            
-            // Tool indicator
-            ctx.fillStyle = '#2c3e50';
-            ctx.font = `${tileSize * 0.3}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.fillText(
-                gameState.tools[gameState.currentTool].charAt(0).toUpperCase(),
-                playerScreenX + tileSize,
-                playerScreenY + tileSize * 0.3
-            );
-            
-            // Draw grid lines
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.lineWidth = 1;
-            for (let x = 0; x <= tilesWide; x++) {
-                ctx.beginPath();
-                ctx.moveTo(x * tileSize, 0);
-                ctx.lineTo(x * tileSize, tilesHigh * tileSize);
-                ctx.stroke();
+        }
+
+        // --- RENDERING ---
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw Map Tiles
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    let tileType = map[r][c];
+                    let x = c * TILE_SIZE;
+                    let y = r * TILE_SIZE;
+
+                    if (tileType === 0) ctx.fillStyle = COLORS.grass;
+                    else if (tileType === 1) ctx.fillStyle = COLORS.dirt;
+                    else if (tileType === 2) ctx.fillStyle = COLORS.wetDirt;
+
+                    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    // Draw grid lines slightly
+                    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+                    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+                }
             }
-            for (let y = 0; y <= tilesHigh; y++) {
-                ctx.beginPath();
-                ctx.moveTo(0, y * tileSize);
-                ctx.lineTo(tilesWide * tileSize, y * tileSize);
-                ctx.stroke();
+
+            // 2. Draw Crops
+            for (let key in crops) {
+                let crop = crops[key];
+                let [c, r] = key.split(',').map(Number);
+                let cx = c * TILE_SIZE + TILE_SIZE/2;
+                let cy = r * TILE_SIZE + TILE_SIZE/2;
+
+                if (crop.stage === 1) {
+                    // Seed
+                    ctx.fillStyle = '#CDDC39';
+                    ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI*2); ctx.fill();
+                } else if (crop.stage === 2) {
+                    // Sprout
+                    ctx.fillStyle = '#8BC34A';
+                    ctx.fillRect(cx - 5, cy - 8, 10, 16);
+                } else if (crop.stage === 3) {
+                    // Mature (Parsnip/Carrot look)
+                    ctx.fillStyle = '#FF9800'; // Body
+                    ctx.beginPath(); ctx.arc(cx, cy+5, 8, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#4CAF50'; // Leaves
+                    ctx.fillRect(cx - 8, cy - 15, 16, 10);
+                }
+            }
+
+            // 3. Draw Selection Box (The Cursor)
+            let selCol = Math.floor(mouse.x / TILE_SIZE);
+            let selRow = Math.floor(mouse.y / TILE_SIZE);
+
+            // Distance check (Can only farm near player)
+            let playerCol = Math.floor((player.x + player.size/2) / TILE_SIZE);
+            let playerRow = Math.floor((player.y + player.size/2) / TILE_SIZE);
+            let dist = Math.abs(selCol - playerCol) + Math.abs(selRow - playerRow);
+
+            if (dist < 3) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.fillRect(selCol * TILE_SIZE, selRow * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(selCol * TILE_SIZE, selRow * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            }
+
+            // 4. Draw Player
+            // Body
+            ctx.fillStyle = COLORS.player;
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+            // Hat (Stardew Style)
+            ctx.fillStyle = COLORS.hat;
+            ctx.fillRect(player.x - 2, player.y - 5, player.size + 4, 8);
+            // Eyes
+            ctx.fillStyle = 'black';
+            ctx.fillRect(player.x + 5, player.y + 5, 4, 4);
+            ctx.fillRect(player.x + 13, player.y + 5, 4, 4);
+        }
+
+        // --- INTERACTION ---
+
+        function handleAction() {
+            let c = Math.floor(mouse.x / TILE_SIZE);
+            let r = Math.floor(mouse.y / TILE_SIZE);
+            let key = `${c},${r}`;
+
+            // Range Check
+            let playerCol = Math.floor((player.x + player.size/2) / TILE_SIZE);
+            let playerRow = Math.floor((player.y + player.size/2) / TILE_SIZE);
+            let dist = Math.abs(c - playerCol) + Math.abs(r - playerRow);
+            if (dist >= 3) return; // Too far
+
+            // 1. HOE: Grass -> Dirt
+            if (currentTool === 1) {
+                if (map[r][c] === 0) {
+                    map[r][c] = 1;
+                }
+            }
+            // 2. WATER: Dirt -> Wet Dirt
+            else if (currentTool === 2) {
+                if (map[r][c] === 1) {
+                    map[r][c] = 2;
+                }
+            }
+            // 3. SEEDS: Dirt/Wet -> Plant
+            else if (currentTool === 3) {
+                if ((map[r][c] === 1 || map[r][c] === 2) && !crops[key]) {
+                    crops[key] = { stage: 1 };
+                }
+            }
+            // 4. HARVEST: Mature -> Money
+            else if (currentTool === 4) {
+                if (crops[key] && crops[key].stage === 3) {
+                    delete crops[key];
+                    map[r][c] = 1; // Revert to dry dirt
+                    money += 10;
+                    document.getElementById('money-display').innerText = money;
+                }
             }
         }
 
-        // Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(console.error);
+        function setTool(id) {
+            currentTool = id;
+            document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tool-${id}`).classList.add('active');
         }
 
-        // Start game automatically if on mobile and page is loaded via QR code
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('play') || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            setTimeout(startGame, 500);
-        }
+        // --- EVENT LISTENERS ---
+
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if(e.key === '1') setTool(1);
+            if(e.key === '2') setTool(2);
+            if(e.key === '3') setTool(3);
+            if(e.key === '4') setTool(4);
+        });
+
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mousedown', handleAction);
+
+        // Start
+        init();
+
     </script>
 </body>
 </html>
